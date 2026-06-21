@@ -10,8 +10,8 @@ stages {
 
     stage('Checkout') {
         steps {
-            git credentialsId: 'f87a34a8-0e09-45e7-b9cf-6dc68feac670',
-                url: 'https://github.com/iam-veeramalla/cicd-end-to-end',
+            git credentialsId: 'github-creds',
+                url: 'https://github.com/venkadesht/cicd_venkadesh.git',
                 branch: 'main'
         }
     }
@@ -19,53 +19,58 @@ stages {
     stage('Build Docker') {
         steps {
             bat '''
-            echo Build Docker Image
-            docker build -t abhishekf5/cicd-e2e:%BUILD_NUMBER% .
+            echo Building Docker Image
+            docker build -t 6380575356/cicd-e2e:%BUILD_NUMBER% .
             '''
         }
     }
 
-    stage('Push the artifacts') {
-        steps {
-            bat '''
-            echo Push Docker Image
-            docker push abhishekf5/cicd-e2e:%BUILD_NUMBER%
-            '''
-        }
-    }
-
-    stage('Checkout K8S manifest SCM') {
-        steps {
-            git credentialsId: 'f87a34a8-0e09-45e7-b9cf-6dc68feac670',
-                url: 'https://github.com/iam-veeramalla/cicd-demo-manifests-repo.git',
-                branch: 'main'
-        }
-    }
-
-    stage('Update K8S manifest & push to Repo') {
+    stage('Push Docker Image') {
         steps {
             withCredentials([
                 usernamePassword(
-                    credentialsId: 'f87a34a8-0e09-45e7-b9cf-6dc68feac670',
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USERNAME',
+                    passwordVariable: 'DOCKER_PASSWORD'
+                )
+            ]) {
+
+                bat '''
+                echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
+                docker push 6380575356/cicd-e2e:%BUILD_NUMBER%
+                '''
+            }
+        }
+    }
+
+    stage('Update Kubernetes Manifest') {
+        steps {
+            powershell '''
+            Get-Content deploy\\deploy.yaml
+
+            (Get-Content deploy\\deploy.yaml) `
+            -replace "32", "$env:BUILD_NUMBER" |
+            Set-Content deploy\\deploy.yaml
+
+            Get-Content deploy\\deploy.yaml
+            '''
+        }
+    }
+
+    stage('Push Changes to GitHub') {
+        steps {
+            withCredentials([
+                usernamePassword(
+                    credentialsId: 'github-creds',
                     usernameVariable: 'GIT_USERNAME',
                     passwordVariable: 'GIT_PASSWORD'
                 )
             ]) {
 
-                powershell '''
-                Get-Content deploy.yaml
-
-                (Get-Content deploy.yaml) `
-                -replace "32","$env:BUILD_NUMBER" |
-                Set-Content deploy.yaml
-
-                Get-Content deploy.yaml
-                '''
-
                 bat '''
-                git add deploy.yaml
-                git commit -m "Updated deploy yaml | Jenkins Pipeline"
-                git push https://%GIT_USERNAME%:%GIT_PASSWORD%@github.com/iam-veeramalla/cicd-demo-manifests-repo.git HEAD:main
+                git add deploy\\deploy.yaml
+                git commit -m "Updated deploy.yaml | Jenkins Build %BUILD_NUMBER%"
+                git push https://%GIT_USERNAME%:%GIT_PASSWORD%@github.com/venkadesht/cicd_venkadesh.git HEAD:main
                 '''
             }
         }
@@ -74,4 +79,6 @@ stages {
 ```
 
 }
+
+
 
