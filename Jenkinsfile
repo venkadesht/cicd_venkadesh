@@ -3,10 +3,10 @@ pipeline {
 
     environment {
         IMAGE_TAG = "${BUILD_NUMBER}"
+        DOCKER_CONFIG = "C:\\ProgramData\\Jenkins\\.docker"
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 git credentialsId: 'github-creds',
