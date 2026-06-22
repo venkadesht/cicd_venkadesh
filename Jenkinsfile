@@ -4,6 +4,7 @@ pipeline {
     environment {
         IMAGE_TAG = "${BUILD_NUMBER}"
         DOCKER_CONFIG = "C:\\ProgramData\\Jenkins\\.docker"
+        DOCKER_BUILDKIT = "0"
     }
 
     stages {
@@ -20,7 +21,7 @@ pipeline {
             steps {
                 bat """
                 echo Building Docker Image
-                docker build --provenance=false -t 6380575356/cicd-e2e:%BUILD_NUMBER% .
+                docker build -t 6380575356/cicd-e2e:%BUILD_NUMBER% .
                 """
             }
         }
