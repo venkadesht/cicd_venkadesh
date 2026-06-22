@@ -20,7 +20,7 @@ pipeline {
             steps {
                 bat """
                 echo Building Docker Image
-                docker build -t 6380575356/cicd-e2e:%BUILD_NUMBER% .
+                docker build --provenance=false -t 6380575356/cicd-e2e:%BUILD_NUMBER% .
                 """
             }
         }
@@ -67,10 +67,10 @@ pipeline {
                     bat """
                     git config user.email "jenkins@local"
                     git config user.name "Jenkins"
-
+                    git remote set-url origin https://%GIT_USERNAME%:%GIT_PASSWORD%@github.com/venkadesht/cicd_venkadesh.git
                     git add deploy\\deploy.yaml
                     git commit -m "Updated deploy.yaml | Jenkins Build %BUILD_NUMBER%"
-                    git push https://%GIT_USERNAME%:%GIT_PASSWORD%@github.com/venkadesht/cicd_venkadesh.git HEAD:main
+                    git push origin HEAD:main
                     """
                 }
             }
