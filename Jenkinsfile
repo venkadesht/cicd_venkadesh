@@ -17,10 +17,10 @@ pipeline {
 
         stage('Build Docker') {
             steps {
-                bat '''
+                bat """
                 echo Building Docker Image
                 docker build -t 6380575356/cicd-e2e:%BUILD_NUMBER% .
-                '''
+                """
             }
         }
 
@@ -33,23 +33,23 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
-                    bat '''
+                    bat """
                     echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
                     docker push 6380575356/cicd-e2e:%BUILD_NUMBER%
-                    '''
+                    """
                 }
             }
         }
 
         stage('Update Kubernetes Manifest') {
             steps {
-                powershell '''
-                (Get-Content deploy\\deploy.yaml) `
-                -replace "v1", "$env:BUILD_NUMBER" |
-                Set-Content deploy\\deploy.yaml
+                powershell """
+                (Get-Content deploy\\\\deploy.yaml) `
+                -replace 'v1', \$env:BUILD_NUMBER |
+                Set-Content deploy\\\\deploy.yaml
 
-                Get-Content deploy\\deploy.yaml
-                '''
+                Get-Content deploy\\\\deploy.yaml
+                """
             }
         }
 
@@ -62,15 +62,14 @@ pipeline {
                         passwordVariable: 'GIT_PASSWORD'
                     )
                 ]) {
-
-                    bat '''
+                    bat """
                     git config user.email "jenkins@local"
                     git config user.name "Jenkins"
 
                     git add deploy\\deploy.yaml
                     git commit -m "Updated deploy.yaml | Jenkins Build %BUILD_NUMBER%"
                     git push https://%GIT_USERNAME%:%GIT_PASSWORD%@github.com/venkadesht/cicd_venkadesh.git HEAD:main
-                    '''
+                    """
                 }
             }
         }
