@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_TAG = "${BUILD_NUMBER}"
         DOCKER_CONFIG = "C:\\ProgramData\\Jenkins\\.docker"
-        DOCKER_BUILDKIT = "0"
+        DOCKER_BUILDKIT = "1"
     }
 
     stages {
@@ -20,7 +20,6 @@ pipeline {
         stage('Build Docker') {
             steps {
                 bat """
-                echo Building Docker Image
                 docker build -t 6380575356/cicd-e2e:%BUILD_NUMBER% .
                 """
             }
@@ -36,7 +35,7 @@ pipeline {
                     )
                 ]) {
                     bat """
-                    docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%
+                    echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
                     docker push 6380575356/cicd-e2e:%BUILD_NUMBER%
                     docker logout
                     """
@@ -47,11 +46,9 @@ pipeline {
         stage('Update Kubernetes Manifest') {
             steps {
                 powershell """
-                (Get-Content deploy\\\\deploy.yaml) `
-                -replace 'v1', \$env:BUILD_NUMBER |
-                Set-Content deploy\\\\deploy.yaml
-
-                Get-Content deploy\\\\deploy.yaml
+                (Get-Content deploy\\deploy.yaml) `
+                -replace '6380575356/cicd-e2e:v1','6380575356/cicd-e2e:%BUILD_NUMBER%' |
+                Set-Content deploy\\deploy.yaml
                 """
             }
         }
@@ -70,7 +67,7 @@ pipeline {
                     git config user.name "Jenkins"
                     git remote set-url origin https://%GIT_USERNAME%:%GIT_PASSWORD%@github.com/venkadesht/cicd_venkadesh.git
                     git add deploy\\deploy.yaml
-                    git commit -m "Updated deploy.yaml | Jenkins Build %BUILD_NUMBER%"
+                    git commit -m "Updated deploy.yaml | Jenkins Build %BUILD_NUMBER%" || exit 0
                     git push origin HEAD:main
                     """
                 }
