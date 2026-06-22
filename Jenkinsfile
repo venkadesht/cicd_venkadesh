@@ -34,7 +34,6 @@ stages {
                     passwordVariable: 'DOCKER_PASSWORD'
                 )
             ]) {
-
                 bat '''
                 echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
                 docker push 6380575356/cicd-e2e:%BUILD_NUMBER%
@@ -46,10 +45,8 @@ stages {
     stage('Update Kubernetes Manifest') {
         steps {
             powershell '''
-            Get-Content deploy\\deploy.yaml
-
             (Get-Content deploy\\deploy.yaml) `
-            -replace "32", "$env:BUILD_NUMBER" |
+            -replace "v1", "$env:BUILD_NUMBER" |
             Set-Content deploy\\deploy.yaml
 
             Get-Content deploy\\deploy.yaml
@@ -68,6 +65,9 @@ stages {
             ]) {
 
                 bat '''
+                git config user.email "jenkins@local"
+                git config user.name "Jenkins"
+
                 git add deploy\\deploy.yaml
                 git commit -m "Updated deploy.yaml | Jenkins Build %BUILD_NUMBER%"
                 git push https://%GIT_USERNAME%:%GIT_PASSWORD%@github.com/venkadesht/cicd_venkadesh.git HEAD:main
@@ -79,6 +79,3 @@ stages {
 ```
 
 }
-
-
-
