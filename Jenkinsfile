@@ -7,6 +7,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 git credentialsId: 'github-creds',
@@ -34,8 +35,9 @@ pipeline {
                     )
                 ]) {
                     bat """
-                    echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
+                    docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%
                     docker push 6380575356/cicd-e2e:%BUILD_NUMBER%
+                    docker logout
                     """
                 }
             }
