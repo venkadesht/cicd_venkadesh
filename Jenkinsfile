@@ -1,81 +1,78 @@
 pipeline {
-agent any
+    agent any
 
-
-environment {
-    IMAGE_TAG = "${BUILD_NUMBER}"
-}
-
-stages {
-
-    stage('Checkout') {
-        steps {
-            git credentialsId: 'github-creds',
-                url: 'https://github.com/venkadesht/cicd_venkadesh.git',
-                branch: 'main'
-        }
+    environment {
+        IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
-    stage('Build Docker') {
-        steps {
-            bat '''
-            echo Building Docker Image
-            docker build -t 6380575356/cicd-e2e:%BUILD_NUMBER% .
-            '''
-        }
-    }
+    stages {
 
-    stage('Push Docker Image') {
-        steps {
-            withCredentials([
-                usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USERNAME',
-                    passwordVariable: 'DOCKER_PASSWORD'
-                )
-            ]) {
+        stage('Checkout') {
+            steps {
+                git credentialsId: 'github-creds',
+                    url: 'https://github.com/venkadesht/cicd_venkadesh.git',
+                    branch: 'main'
+            }
+        }
+
+        stage('Build Docker') {
+            steps {
                 bat '''
-                echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
-                docker push 6380575356/cicd-e2e:%BUILD_NUMBER%
+                echo Building Docker Image
+                docker build -t 6380575356/cicd-e2e:%BUILD_NUMBER% .
                 '''
             }
         }
-    }
 
-    stage('Update Kubernetes Manifest') {
-        steps {
-            powershell '''
-            (Get-Content deploy\\deploy.yaml) `
-            -replace "v1", "$env:BUILD_NUMBER" |
-            Set-Content deploy\\deploy.yaml
-
-            Get-Content deploy\\deploy.yaml
-            '''
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )
+                ]) {
+                    bat '''
+                    echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
+                    docker push 6380575356/cicd-e2e:%BUILD_NUMBER%
+                    '''
+                }
+            }
         }
-    }
 
-    stage('Push Changes to GitHub') {
-        steps {
-            withCredentials([
-                usernamePassword(
-                    credentialsId: 'github-creds',
-                    usernameVariable: 'GIT_USERNAME',
-                    passwordVariable: 'GIT_PASSWORD'
-                )
-            ]) {
+        stage('Update Kubernetes Manifest') {
+            steps {
+                powershell '''
+                (Get-Content deploy\\deploy.yaml) `
+                -replace "v1", "$env:BUILD_NUMBER" |
+                Set-Content deploy\\deploy.yaml
 
-                bat '''
-                git config user.email "jenkins@local"
-                git config user.name "Jenkins"
-
-                git add deploy\\deploy.yaml
-                git commit -m "Updated deploy.yaml | Jenkins Build %BUILD_NUMBER%"
-                git push https://%GIT_USERNAME%:%GIT_PASSWORD%@github.com/venkadesht/cicd_venkadesh.git HEAD:main
+                Get-Content deploy\\deploy.yaml
                 '''
             }
         }
+
+        stage('Push Changes to GitHub') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'github-creds',
+                        usernameVariable: 'GIT_USERNAME',
+                        passwordVariable: 'GIT_PASSWORD'
+                    )
+                ]) {
+
+                    bat '''
+                    git config user.email "jenkins@local"
+                    git config user.name "Jenkins"
+
+                    git add deploy\\deploy.yaml
+                    git commit -m "Updated deploy.yaml | Jenkins Build %BUILD_NUMBER%"
+                    git push https://%GIT_USERNAME%:%GIT_PASSWORD%@github.com/venkadesht/cicd_venkadesh.git HEAD:main
+                    '''
+                }
+            }
+        }
     }
-}
-
-
 }
