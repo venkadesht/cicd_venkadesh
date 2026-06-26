@@ -43,11 +43,11 @@ pipeline {
             }
         }
 
-        stage('Update Kubernetes Manifest') {
-           steps {
+       stage('Update Kubernetes Manifest') {
+          steps {
         powershell """
         \$content = Get-Content deploy\\deploy.yaml
-        \$content = \$content -replace '6380575356/cicd-e2e:[^\\s]+', '6380575356/cicd-e2e:%BUILD_NUMBER%'
+        \$content = \$content -replace '6380575356/cicd-e2e:[^\\s]+', '6380575356/cicd-e2e:${env.BUILD_NUMBER}'
         \$content | Set-Content deploy\\deploy.yaml
         """
     }
