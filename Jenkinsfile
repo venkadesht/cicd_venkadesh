@@ -44,14 +44,14 @@ pipeline {
         }
 
         stage('Update Kubernetes Manifest') {
-            steps {
-                powershell """
-                (Get-Content deploy\\deploy.yaml) `
-                -replace '6380575356/cicd-e2e:v1','6380575356/cicd-e2e:%BUILD_NUMBER%' |
-                Set-Content deploy\\deploy.yaml
-                """
-            }
-        }
+           steps {
+        powershell """
+        \$content = Get-Content deploy\\deploy.yaml
+        \$content = \$content -replace '6380575356/cicd-e2e:[^\\s]+', '6380575356/cicd-e2e:%BUILD_NUMBER%'
+        \$content | Set-Content deploy\\deploy.yaml
+        """
+    }
+}
 
         stage('Push Changes to GitHub') {
             steps {
