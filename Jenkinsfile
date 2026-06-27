@@ -26,22 +26,22 @@ pipeline {
         }
 
         stage('Push Docker Image') {
-            steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-creds',
-                        usernameVariable: 'DOCKER_USERNAME',
-                        passwordVariable: 'DOCKER_PASSWORD'
-                    )
-                ]) {
-                    bat """
-                    echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
-                    docker push 6380575356/cicd-e2e:%BUILD_NUMBER%
-                    docker logout
-                    """
-                }
-            }
+           steps {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'dockerhub-creds',
+                usernameVariable: 'DOCKER_USERNAME',
+                passwordVariable: 'DOCKER_PASSWORD'
+            )
+        ]) {
+            bat """
+            docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%
+            docker push 6380575356/cicd-e2e:%BUILD_NUMBER%
+            docker logout
+            """
         }
+    }
+}
 
        stage('Update Kubernetes Manifest') {
           steps {
