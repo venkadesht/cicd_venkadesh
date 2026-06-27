@@ -1,9 +1,9 @@
 .page-header {
-  margin-top: 60px;
+  margin-top: 30px;
 }
 
 .fa-trash-alt {
-  color: red;
+  color: green;
   float: right;
   cursor: pointer;
 }
