@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: todo
-        image: 6380575356/cicd-e2e:41
+        image: 6380575356/cicd-e2e:42
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
