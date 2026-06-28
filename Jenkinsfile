@@ -1,3 +1,18 @@
+stage('Skip Jenkins Commits') {
+    steps {
+        script {
+            def commitMessage = bat(
+                script: 'git log -1 --pretty=%B',
+                returnStdout: true
+            ).trim()
+
+            if (commitMessage.contains('Updated deploy.yaml')) {
+                currentBuild.result = 'NOT_BUILT'
+                error('Skipping Jenkins-generated commit')
+            }
+        }
+    }
+}
 pipeline {
     agent any
 
